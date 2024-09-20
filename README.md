@@ -2,6 +2,8 @@
 
 This is a simple Nakama's API built using **[Hono.js](https://hono.dev)**, **[Prisma ORM](https://www.prisma.io)**, and documented with **[OpenAPI Swagger](https://swagger.io/specification/)**. It provides endpoints to retrieve data from the database for Nakama's store.
 
+- [Nakama API Documentation](https://nakama.endabelyu.store/api)
+
 ## Features
 
 - **Product Management**: Managing one-piece merchandise products, including creating, updating, and retrieving product information.
