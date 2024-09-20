@@ -11,7 +11,7 @@ COPY . .
 RUN bun install --frozen-lockfile
 
 # Generate Prisma
-RUN bun run generate
+RUN bun run db:generate
 
 EXPOSE 3100
 # Run the application
