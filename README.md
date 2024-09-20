@@ -4,9 +4,20 @@ This is a simple Nakama's API built using **[Hono.js](https://hono.dev)**, **[Pr
 
 ## Features
 
-- Built with Hono.js for fast and efficient routing.
-- Utilizes Prisma ORM for seamless database interactions.
-- Comprehensive API documentation generated with OpenAPI Swagger.
+- **Product Management**: Managing one-piece merchandise products, including creating, updating, and retrieving product information.
+- **Category Management**: Managing product categories, including creating, updating, and retrieving category information.
+- **Order Management**: Managing orders, including creating, updating, and retrieving order information.
+- **Search and Filtering**: Searching and filtering products based on various criteria, such as price, category, and stock availability.
+
+## Tech Stacks
+
+- [Bun](https://bun.sh/)
+- [Hono](https://hono.dev/)
+- [Typescript](https://www.typescriptlang.org/)
+- [PostreSQL](https://www.postgresql.org/)
+- [Prisma](https://www.prisma.io/)
+- [Zod](https://hono.dev/examples/zod-openapi)
+- [SwaggerUI](https://hono.dev/examples/swagger-ui)
 
 ## Installation
 
