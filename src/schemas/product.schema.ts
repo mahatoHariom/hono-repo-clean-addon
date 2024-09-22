@@ -26,14 +26,14 @@ export const productSchema = z.object({
     example: "2023-08-25T12:00:00Z",
   }),
 });
-
+const sortType = ["asc", "desc"] as const;
 export const productQuerySchema = z.object({
   page: z.coerce.number().min(1).optional().openapi({ example: 1 }),
   limit: z.coerce.number().min(1).optional().openapi({ example: 10 }),
   // filters: z.string().optional().openapi({ example: '{"name": "ace"}' }),
-  filters: z.string().optional().openapi({ example: "ace" }),
+  q: z.string().optional().openapi({ example: "ace" }),
   // sorts: z.string().optional().openapi({ example: '{"name": "asc"}' }),
-  sorts: z.string().optional().openapi({ example: '"asc" / "desc"' }),
+  sorts: z.enum(sortType).optional(),
 });
 
 export const productIdSchema = productSchema.pick({ id: true }).openapi({

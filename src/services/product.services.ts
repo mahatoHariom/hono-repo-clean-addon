@@ -6,10 +6,10 @@ import { z } from "@hono/zod-openapi";
 type SortType = "asc" | "desc";
 
 export const getAll = async (
-  page: number = 1,
-  limit: number = 10,
-  filters: string = "",
-  sort: string = "asc",
+  page: number,
+  limit: number,
+  q: string,
+  sort: string,
 ) => {
   const skip = page > 0 ? (page - 1) * limit : 0;
   const sortFormated = sort as SortType;
@@ -19,7 +19,7 @@ export const getAll = async (
       prismaClient.product.findMany({
         where: {
           name: {
-            contains: filters,
+            contains: q,
             mode: "insensitive",
           },
         },
@@ -32,7 +32,7 @@ export const getAll = async (
       prismaClient.product.count({
         where: {
           name: {
-            contains: filters,
+            contains: q,
           },
         },
       }),
