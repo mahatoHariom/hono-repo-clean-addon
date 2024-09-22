@@ -56,12 +56,12 @@ productRoute.openapi(
   },
   async (c) => {
     try {
-      const { page, limit, filters, sorts } = c.req.query();
+      const { page = 1, limit = 10, q, sorts = "asc" } = c.req.query();
 
       const { products, pagination } = await getAll(
         Number(page),
         Number(limit),
-        filters,
+        q,
         sorts,
       );
       return c.json(
