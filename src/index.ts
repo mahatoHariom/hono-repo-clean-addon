@@ -11,10 +11,11 @@ app.get("/", (c) => {
 app.use("*", logger());
 app.use(
   "*",
-  cors({
-    origin:
-      "'http://localhost:5173','https://nakama.endabelyu.store','https://nakama-api.endabelyu.store','https://postman-echo.com'",
-  }),
+  // cors({
+  //   origin:
+  //     "'http://localhost:5173','https://nakama.endabelyu.store','https://nakama-api.endabelyu.store','https://postman-echo.com'",
+  // }),
+  cors(),
 );
 app.notFound((c) => {
   return c.text("Sorry, the page you are looking for does not exist.", 404);
