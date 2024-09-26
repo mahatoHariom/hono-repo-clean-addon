@@ -42,6 +42,6 @@ app.doc("/doc", {
 app.route("/products", productRoute);
 
 export default {
-  port: 3100,
+  port: process.env.PORT || 3000,
   fetch: app.fetch,
 };
