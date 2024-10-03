@@ -149,73 +149,73 @@ productRoute.openapi(
 );
 
 // // Get product by id
-// productRoute.openapi(
-//   {
-//     method: "get",
-//     path: "/{productId}",
-//     summary: "Get Product by id",
-//     request: {
-//       params: z.object({
-//         productId: z.string(),
-//       }),
-//     },
-//     responses: {
-//       200: {
-//         description: "Get Product by Slug",
-//         content: {
-//           "application/json": {
-//             schema: z.object({
-//               ok: z.boolean().default(true),
-//               message: z.string(),
-//               data: productSchema,
-//             }),
-//           },
-//         },
-//       },
-//       400: {
-//         description: "Get Product by Slug Failed",
-//         content: {
-//           "application/json": {
-//             schema: z.object({
-//               ok: z.boolean().default(false),
-//               message: z.string(),
-//             }),
-//           },
-//         },
-//       },
-//     },
-//     tags: API_TAGS,
-//   },
-//   async (c) => {
-//     const { productId } = c.req.valid("param");
-//     try {
-//       const { product } = await getById(productId);
-//       return c.json(
-//         {
-//           ok: true,
-//           message: "Products fetched successfully",
-//           data: product,
-//         },
-//         200,
-//       );
-//     } catch (error: Error | any) {
-//       console.info(error.message);
-//       return c.json(
-//         {
-//           ok: false,
-//           message: error.message || "Product not found!",
-//         },
-//         400,
-//       );
-//     }
-//   },
-// );
+productRoute.openapi(
+  {
+    method: "get",
+    path: "/{productId}",
+    summary: "Get Product by id (for admin dashboard)",
+    request: {
+      params: z.object({
+        productId: z.string(),
+      }),
+    },
+    responses: {
+      200: {
+        description: "Get Product by Slug",
+        content: {
+          "application/json": {
+            schema: z.object({
+              ok: z.boolean().default(true),
+              message: z.string(),
+              data: productSchema,
+            }),
+          },
+        },
+      },
+      400: {
+        description: "Get Product by Slug Failed",
+        content: {
+          "application/json": {
+            schema: z.object({
+              ok: z.boolean().default(false),
+              message: z.string(),
+            }),
+          },
+        },
+      },
+    },
+    tags: API_TAGS,
+  },
+  async (c) => {
+    const { productId } = c.req.valid("param");
+    try {
+      const { product } = await getById(productId);
+      return c.json(
+        {
+          ok: true,
+          message: "Products fetched successfully",
+          data: product,
+        },
+        200,
+      );
+    } catch (error: Error | any) {
+      console.info(error.message);
+      return c.json(
+        {
+          ok: false,
+          message: error.message || "Product not found!",
+        },
+        400,
+      );
+    }
+  },
+);
 // Update product by id
 productRoute.openapi(
   {
     method: "patch",
     path: "/{productId}",
-    summary: "Update Product by id",
+    summary: "Update Product by id (for admin dashboard)",
     request: {
       params: z.object({
         productId: z.string(),
@@ -288,7 +288,7 @@ productRoute.openapi(
   {
     method: "delete",
     path: "/{productId}",
-    summary: "Delete Product by id",
+    summary: "Delete Product by id (for admin dashboard)",
     request: {
       params: z.object({
         productId: z.string(),
