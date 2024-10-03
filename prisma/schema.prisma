@@ -18,15 +18,18 @@ datasource db {
 model User {
   id String @id @default(cuid())
 
-  username String @unique
-  email    String @unique
+  name       String @db.VarChar(100)
+  email      String @unique
+  password   Password?
+  phone      String?  @unique @db.VarChar(32)
+  address    String?  @db.VarChar(255)
+  
+  carts      Cart[]
 
-  password Password?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  carts Cart[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  @@map("users")
 }
 
 model Password {
@@ -36,6 +39,9 @@ model Password {
 
   user   User   @relation(fields: [userId], references: [id])
   userId String @unique
+
+  @@map("passwords")
+
 }
 
 model Product {
@@ -54,6 +60,8 @@ model Product {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("products")
 }
 
 model CartItem {
@@ -69,6 +77,8 @@ model CartItem {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("cart_items")
 }
 
 model Cart {
@@ -81,4 +91,6 @@ model Cart {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("carts")
 }
