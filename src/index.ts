@@ -3,6 +3,8 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { productRoute } from "./routes/product.route";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import { userRoute } from "./routes/users.route";
+import { authRoute } from "./routes/auth.route";
 const app = new OpenAPIHono();
 
 app.get("/", (c) => {
@@ -40,6 +42,8 @@ app.doc("/doc", {
 
 // API ROUTES
 app.route("/products", productRoute);
+app.route("/users", userRoute);
+app.route("/auth", authRoute);
 
 export default {
   port: process.env.PORT || 3000,
