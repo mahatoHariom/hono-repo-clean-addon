@@ -5,6 +5,7 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { userRoute } from "./routes/users.route";
 import { authRoute } from "./routes/auth.route";
+import { cartRoute } from "./routes/cart.route";
 const app = new OpenAPIHono();
 
 app.get("/", (c) => {
@@ -44,6 +45,7 @@ app.doc("/doc", {
 app.route("/products", productRoute);
 app.route("/users", userRoute);
 app.route("/auth", authRoute);
+app.route("/cart", cartRoute);
 
 export default {
   port: process.env.PORT || 3000,
