@@ -2,14 +2,19 @@ import { Product } from "@prisma/client";
 import prismaClient from "../libs/prismaClient";
 import { productSchema } from "../schemas/product.schema";
 import { z } from "@hono/zod-openapi";
+import {
+  cartIdPayloadSchema,
+  cartItemSchema,
+  cartPayloadSchema,
+} from "../schemas/cart.schema";
 
 type SortType = "asc" | "desc";
 
-export const getAll = async (id: string) => {
+export const getCart = async (userId: string) => {
   try {
     const carts = await prismaClient.cart.findFirst({
       where: {
-        userId: id,
+        userId,
       },
       orderBy: { createdAt: "desc" },
       include: {
@@ -30,7 +35,7 @@ export const getAll = async (id: string) => {
     if (!carts) {
       const newCart = await prismaClient.cart.create({
         data: {
-          userId: id,
+          userId,
         },
         include: {
           items: {
@@ -49,7 +54,7 @@ export const getAll = async (id: string) => {
     }
     const totalItem = carts.items.length;
     const totalPrice = carts.items.reduce((acc, item) => {
-      return acc + item.quantity + item.product.price;
+      return acc + item.quantity * item.product.price;
     }, 0);
     return {
       carts,
@@ -63,75 +68,250 @@ export const getAll = async (id: string) => {
   }
 };
 
-// export const getBySlug = async (slug: string) => {
-//   try {
-//     const product = await prismaClient.product.findUniqueOrThrow({
-//       where: { slug },
-//     });
+export const addItems = async (
+  body: z.infer<typeof cartPayloadSchema>,
+  userId: string,
+) => {
+  try {
+    const cart = await prismaClient.cart.findFirst({
+      where: { userId },
+      include: { items: true },
+    });
+    if (!cart) {
+      throw new Error("Cart not found!");
+    }
+    const product = await prismaClient.product.findUnique({
+      where: { id: body.productId },
+    });
+    if (!product) {
+      throw new Error("Product not found!");
+    }
+    const existingItem = cart.items.find(
+      (item) => item.productId === body.productId,
+    );
+    const totalQuantity = existingItem
+      ? existingItem.quantity + body.quantity
+      : body.quantity;
 
-//     if (!product) {
-//       throw new Error("Product not found!");
-//     }
+    if (totalQuantity > product.stock) {
+      throw new Error("insufficient stock for this product");
+    }
+    if (existingItem) {
+      const updateItem = await prismaClient.cartItem.update({
+        where: {
+          id: existingItem.id,
+        },
+        data: {
+          quantity: totalQuantity,
+        },
+      });
+    } else {
+      const newItem = await prismaClient.cartItem.create({
+        data: {
+          productId: body.productId,
+          quantity: body.quantity,
+          cartId: cart.id,
+        },
+      });
+    }
+    const updatedCart = await prismaClient.cart.findFirst({
+      where: { userId },
+      include: {
+        items: true,
+      },
+      //     include: {
+      //       product: true, // Include product details for display purposes
+      //     },
+      //   },
+      // },
+    });
+    return {
+      updatedCart,
+    };
+  } catch (error) {
+    throw error;
+  } finally {
+    await prismaClient.$disconnect();
+  }
+};
 
-//     return {
-//       product,
-//     };
-//   } catch (error) {
-//     throw error;
-//   } finally {
-//     await prismaClient.$disconnect();
-//   }
-// };
-// export const getById = async (id: string) => {
-//   try {
-//     const product = await prismaClient.product.findUniqueOrThrow({
-//       where: { id },
-//     });
+export const updateById = async (itemId: string, quantity: number) => {
+  const isExist = await prismaClient.cartItem.findUnique({
+    where: { id: itemId },
+    include: { cart: true, product: true },
+  });
+  if (!isExist) {
+    throw new Error("item not found!");
+  }
 
-//     if (!product) {
-//       throw new Error("Product not found!");
-//     }
+  if (quantity > isExist.product.stock) {
+    throw new Error("insufficient stock for this product");
+  }
+  try {
+    const updateProduct = await prismaClient.cartItem.update({
+      where: {
+        id: itemId,
+      },
+      data: { quantity },
+    });
+    if (!updateProduct) {
+      throw new Error("Product not found!");
+    }
 
-//     return {
-//       product,
-//     };
-//   } catch (error) {
-//     throw error;
-//   } finally {
-//     await prismaClient.$disconnect();
-//   }
-// };
+    return {
+      product: updateProduct,
+    };
+  } catch (error: Error | any) {
+    return error;
+  } finally {
+    await prismaClient.$disconnect();
+  }
+};
 
-// export const updateById = async (id: string, data: Product) => {
-//   const isExist = await getById(id);
-//   if (!isExist) {
-//     throw new Error("Product not found!");
-//   }
+export const deleteById = async (itemId: string, userId: string) => {
+  try {
+    const isCartExist = await prismaClient.cart.findFirst({
+      where: { userId },
+      include: { items: true },
+    });
+    if (!isCartExist) {
+      throw new Error("Cart not found!");
+    }
+    const isItemExist = await prismaClient.cartItem.findUnique({
+      where: { id: itemId },
+      include: { cart: true, product: true },
+    });
+    if (!isItemExist) {
+      throw new Error("Product not found!");
+    } else {
+      return await prismaClient.cartItem.delete({
+        where: { id: isItemExist.id },
+        include: {
+          product: true,
+        },
+      });
+    }
+  } catch (error) {
+    throw error;
+  } finally {
+    await prismaClient.$disconnect();
+  }
+};
 
-//   try {
-//     const updateProduct = await prismaClient.product.update({
-//       where: {
-//         id: id,
-//       },
-//       data: data,
-//     });
-//     if (!updateProduct) {
-//       throw new Error("Product not found!");
-//     }
+export const checkout = async (
+  body: z.infer<typeof cartIdPayloadSchema>[],
+  userId: string,
+) => {
+  try {
+    const cart = await prismaClient.cart.findFirst({
+      where: { userId },
+      include: { items: true },
+    });
+    if (!cart) {
+      throw new Error("Cart not found!");
+    }
 
-//     return {
-//       product: updateProduct,
-//     };
-//   } catch (error: Error | any) {
-//     return error;
-//   } finally {
-//     await prismaClient.$disconnect();
-//   }
-// };
-// export const deleteById = async (id: string) => {
-//   const isExist = await getById(id);
-//   if (!isExist) {
-//     throw new Error("Product not found!");
-//   }
-//   return await prismaClient.product.delete({ where: { id } });
-// };
+    const itemOrder = await prismaClient.cartItem.findMany({
+      where: {
+        id: {
+          in: body, // body contains the array of IDs
+        },
+      },
+      include: {
+        product: true, // Include the product information
+      },
+    });
+
+    console.info(body, itemOrder, "orders");
+    const isItemExist = body.some((id) =>
+      itemOrder.some((item) => item.id === id),
+    );
+
+    if (!isItemExist) {
+      throw new Error("Some item not found!");
+    }
+    const createdOrder = await prismaClient.order.create({
+      data: {
+        userId,
+        items: {
+          create: itemOrder.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            productPrice: item.product.price,
+          })),
+        },
+        totalPrice: itemOrder.reduce((acc, item) => {
+          return acc + item.quantity * item.product.price;
+        }, 0),
+        status: "PENDING",
+      },
+      include: {
+        user: true,
+        items: true,
+      },
+    });
+    console.info(itemOrder, itemOrder.length, isItemExist);
+    return {
+      createdOrder,
+    };
+  } catch (error) {
+    throw error;
+  } finally {
+    await prismaClient.$disconnect();
+  }
+};
+
+export const getOrders = async (userId: string) => {
+  try {
+    const orders = await prismaClient.order.findMany({
+      where: {
+        userId,
+      },
+      include: {
+        items: true,
+      },
+    });
+    if (!orders) {
+      throw new Error("Orders not found!");
+    }
+    return {
+      orders,
+    };
+  } catch (error) {
+    throw error;
+  } finally {
+    await prismaClient.$disconnect();
+  }
+};
+
+export const buyItemFromOrder = async (orderId: string) => {
+  try {
+    const order = await prismaClient.order.findUnique({
+      where: { id: orderId },
+      include: {
+        user: true,
+        items: true,
+      },
+    });
+    if (!order) {
+      throw new Error("Order not found!");
+    }
+
+    const updateStatusOrder = await prismaClient.order.update({
+      where: { id: orderId },
+      data: { status: "COMPLETED" },
+      include: {
+        user: true,
+        items: true,
+      },
+    });
+    console.info(updateStatusOrder);
+    return {
+      updateStatusOrder,
+    };
+  } catch (error) {
+    throw error;
+  } finally {
+    await prismaClient.$disconnect();
+  }
+};
