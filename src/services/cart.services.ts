@@ -168,7 +168,10 @@ export const updateById = async (itemId: string, quantity: number) => {
   }
 };
 
-export const deleteById = async (itemId: string, userId: string) => {
+export const deleteItemsFromCartById = async (
+  itemId: string,
+  userId: string,
+) => {
   try {
     const isCartExist = await prismaClient.cart.findFirst({
       where: { userId },
@@ -235,6 +238,7 @@ export const checkout = async (
         userId,
         items: {
           create: itemOrder.map((item) => ({
+            id: item.id,
             productId: item.productId,
             quantity: item.quantity,
             productPrice: item.product.price,
@@ -305,6 +309,20 @@ export const buyItemFromOrder = async (orderId: string) => {
         items: true,
       },
     });
+
+    if (!updateStatusOrder) {
+      throw new Error("Buy items failed");
+    }
+    const deleteItemsFromCart = await prismaClient.cartItem.deleteMany({
+      where: {
+        id: {
+          in: order.items.map((item) => item.id),
+        },
+      },
+    });
+    if (!deleteItemsFromCart) {
+      throw new Error("But items failed");
+    }
     console.info(updateStatusOrder);
     return {
       updateStatusOrder,
