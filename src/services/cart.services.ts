@@ -7,25 +7,54 @@ type SortType = "asc" | "desc";
 
 export const getAll = async (id: string) => {
   try {
-    const [carts, total] = await Promise.all([
-      prismaClient.cart.findMany({
-        where: {
-          id,
+    const carts = await prismaClient.cart.findFirst({
+      where: {
+        userId: id,
+      },
+      orderBy: { createdAt: "desc" },
+      include: {
+        user: true,
+        items: {
+          include: {
+            product: {
+              omit: {
+                description: true,
+                sku: true,
+              },
+            },
+          },
         },
-      }),
-      prismaClient.cart.count({
-        where: {
-          id,
-        },
-      }),
-    ]);
+      },
+    });
 
-    if (carts.length === 0) {
-      throw new Error("Products not found!");
+    if (!carts) {
+      const newCart = await prismaClient.cart.create({
+        data: {
+          userId: id,
+        },
+        include: {
+          items: {
+            include: {
+              product: true,
+            },
+          },
+        },
+      });
+
+      return {
+        carts: newCart,
+        totalItem: 0,
+        totalPrice: 0,
+      };
     }
-
+    const totalItem = carts.items.length;
+    const totalPrice = carts.items.reduce((acc, item) => {
+      return acc + item.quantity + item.product.price;
+    }, 0);
     return {
       carts,
+      totalItem,
+      totalPrice,
     };
   } catch (error) {
     throw error;
