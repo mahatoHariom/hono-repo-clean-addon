@@ -26,6 +26,7 @@ model User {
   address    String?  @db.VarChar(255)
   
   carts      Cart[]
+  orders     Order[]
 
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -58,6 +59,7 @@ model Product {
   stock       Int
 
   cartItems CartItem[]
+  orderItems    OrderItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -94,4 +96,44 @@ model Cart {
   updatedAt DateTime @updatedAt
 
   @@map("carts")
+}
+
+model Order {
+  id String @id @default(cuid())
+
+  user       User   @relation(fields: [userId], references: [id])
+  userId     String
+
+  items      OrderItem[]  // Relation to OrderItems
+  totalPrice Int
+  status     OrderStatus @default(PENDING)  // e.g., 'pending', 'completed', 'failed'
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id String @id @default(cuid())
+
+  order       Order   @relation(fields: [orderId], references: [id])
+  orderId     String
+
+  product     Product @relation(fields: [productId], references: [id])
+  productId   String
+
+  quantity    Int
+  productPrice   Int
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+
+
+enum OrderStatus {
+  PENDING
+  COMPLETED
+  CANCELED
 }
