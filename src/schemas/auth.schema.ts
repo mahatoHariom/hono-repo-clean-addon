@@ -17,7 +17,7 @@ export const loginSchema = z.object({
 
 export const registerSchema = loginSchema
   .extend({
-    name: z.string().min(5).max(100).openapi({ example: "ace" }),
+    name: z.string().min(4).max(100).openapi({ example: "ace" }),
     confirmPassword: z
       .string()
       .min(8, "Password must be at least 8 characters long")

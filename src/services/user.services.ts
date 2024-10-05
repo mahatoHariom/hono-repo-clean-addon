@@ -19,10 +19,10 @@ export const getAll = async (
       prismaClient.user.findMany({
         select: {
           id: true,
-          username: true,
+          name: true,
         },
         where: {
-          username: {
+          name: {
             contains: q,
             mode: "insensitive",
           },
@@ -30,7 +30,7 @@ export const getAll = async (
         skip,
         take: limit,
         orderBy: {
-          username: sortFormated,
+          name: sortFormated,
         },
       }),
       prismaClient.product.count({

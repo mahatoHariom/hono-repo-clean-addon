@@ -1,10 +1,22 @@
 import { OpenAPIHono, z } from "@hono/zod-openapi";
 import { loginSchema, registerSchema } from "../schemas/auth.schema";
-import { login, register } from "../services/auth.service";
+import { getProfile, login, register } from "../services/auth.service";
 import { setCookie } from "hono/cookie";
+import { checkUserToken } from "../middleware/check-user-token";
+import { Context } from "hono";
 const API_TAGS = ["Auth"];
 export const authRoute = new OpenAPIHono();
 
+authRoute.openAPIRegistry.registerComponent(
+  "securitySchemes",
+  "AuthorizationBearer",
+  {
+    type: "http",
+    scheme: "bearer",
+    in: "header",
+    description: "Bearer token",
+  },
+);
 // Register user
 authRoute.openapi(
   {
@@ -50,17 +62,18 @@ authRoute.openapi(
   },
   async (c) => {
     try {
-      const body = await c.req.json();
+      const { confirmPassword, ...body } = await c.req.json();
       const { user } = await register(body);
       return c.json(
         {
           ok: true,
-          message: "Register successfully",
+          message: "Register account successfully",
           data: user,
         },
         201,
       );
     } catch (error: Error | any) {
+      console.error(error);
       return c.json(
         {
           ok: false,
@@ -105,6 +118,7 @@ authRoute.openapi(
       setCookie(c, "token", token);
       return c.json(
         {
+          token,
           ok: true,
           message: "Login successfully",
           data: user,
@@ -128,17 +142,9 @@ authRoute.openapi(
   {
     method: "get",
     path: "/me",
+    middleware: checkUserToken,
+    security: [{ AuthorizationBearer: [] }],
     summary: "Get profile user",
-    request: {
-      body: {
-        content: {
-          "application/json": {
-            schema: loginSchema,
-          },
-        },
-      },
-    },
-
     responses: {
       200: {
         description: "Get profile successfully",
@@ -149,72 +155,22 @@ authRoute.openapi(
     },
     tags: API_TAGS,
   },
-  async (c) => {
+  async (c: Context) => {
     try {
-      const header = await c.req.json();
-      //   const { token, user } = await login(header);
-      //   c.header("Authorization", `${token}`);
-      //   setCookie(c, "token", token);
+      const user = c.get("user");
+      console.info(user, "userData");
+      const { user: userData } = await getProfile(user.id as string);
+
       return c.json(
         {
           ok: true,
-          message: "Login successfully",
+          message: "Get profile successfully",
+          data: userData,
         },
         200,
       );
     } catch (error: Error | any) {
-      return c.json(
-        {
-          ok: false,
-          message: error.message || "Login failed!",
-        },
-        400,
-      );
-    }
-  },
-);
-
-// get profile
-authRoute.openapi(
-  {
-    method: "get",
-    path: "/logout",
-    summary: "Log out user",
-    security: [{ AuthorizationBearer: [] }],
-    request: {
-      body: {
-        content: {
-          "application/json": {
-            schema: loginSchema,
-          },
-        },
-      },
-    },
-
-    responses: {
-      200: {
-        description: "Log out  successfully",
-      },
-      400: {
-        description: "Log out  Failed",
-      },
-    },
-    tags: API_TAGS,
-  },
-  async (c) => {
-    try {
-      const header = await c.req.json();
-      //   const { token, user } = await login(header);
-      //   c.header("Authorization", `${token}`);
-      //   setCookie(c, "token", token);
-      return c.json(
-        {
-          ok: true,
-          message: "Login successfully",
-        },
-        200,
-      );
-    } catch (error: Error | any) {
+      console.info(error);
       return c.json(
         {
           ok: false,

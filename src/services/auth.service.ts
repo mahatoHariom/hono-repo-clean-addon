@@ -20,10 +20,19 @@ export const register = async (payload: z.infer<typeof registerSchema>) => {
         },
       },
       select: {
+        id: true,
         name: true,
       },
     });
 
+    // create cart if user successfully registered
+    if (user) {
+      await prismaClient.cart.create({
+        data: {
+          userId: user.id,
+        },
+      });
+    }
     return { user };
   } catch (error) {
     throw error;
@@ -64,10 +73,32 @@ export const login = async (payload: z.infer<typeof loginSchema>) => {
       user: {
         id: user.id,
         name: user.name,
-        email: user.email,
       },
     };
   } catch (error) {
+    throw error;
+  } finally {
+    await prismaClient.$disconnect();
+  }
+};
+
+export const getProfile = async (userId: string) => {
+  console.info(userId);
+  try {
+    const user = await prismaClient.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, createdAt: true, updatedAt: true },
+    });
+
+    if (!user) {
+      throw new Error("User not found!");
+    }
+
+    return {
+      user,
+    };
+  } catch (error) {
+    console.error(error);
     throw error;
   } finally {
     await prismaClient.$disconnect();
