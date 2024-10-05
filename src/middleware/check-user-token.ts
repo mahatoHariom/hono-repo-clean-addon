@@ -3,7 +3,7 @@ import { validateToken } from "../libs/token";
 import { getCookie } from "hono/cookie";
 import prismaClient from "../libs/prismaClient";
 
-type Env = {
+export type Env = {
   Variables: {
     user: {
       id: string;
@@ -48,6 +48,5 @@ export const checkUserToken = createMiddleware<Env>(async (c, next) => {
   }
 
   c.set("user", user);
-
   await next();
 });

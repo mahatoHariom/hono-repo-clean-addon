@@ -12,7 +12,7 @@ export const createToken = async (userId: string) => {
   const payload = {};
   const options = {
     subject: userId,
-    expiresIn: new TimeSpan(30, "d"),
+    expiresIn: new TimeSpan(1, "d"),
     includeIssuedTimestamp: true,
   };
 
@@ -21,23 +21,18 @@ export const createToken = async (userId: string) => {
 
     return jwt;
   } catch (error) {
-    console.error();
+    console.error(error);
     return null;
   }
 };
 
 export const validateToken = async (token: string) => {
   const secret = await getSecret();
-
   try {
-    try {
-      const decodedToken = await validateJWT("HS256", secret, token);
-      return decodedToken;
-    } catch (error) {
-      console.info("Failed token validation attempt");
-    }
+    const decodedToken = await validateJWT("HS256", secret, token);
+    return decodedToken;
   } catch (error) {
-    console.error(error);
+    console.info("Failed token validation attempt");
     return null;
   }
 };
