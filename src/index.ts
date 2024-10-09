@@ -1,4 +1,3 @@
-import { swaggerUI } from "@hono/swagger-ui";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { productRoute } from "./routes/product.route";
 import { cors } from "hono/cors";
@@ -8,7 +7,7 @@ import { authRoute } from "./routes/auth.route";
 import { cartRoute } from "./routes/cart.route";
 import { orderRoute } from "./routes/order.route";
 const app = new OpenAPIHono();
-
+import { apiReference } from "@scalar/hono-api-reference";
 app.get("/", (c) => {
   return c.text("Hello This is Nakama's API!");
 });
@@ -31,7 +30,14 @@ app.onError((err, c) => {
   );
 });
 
-app.get("/api", swaggerUI({ url: "/doc" }));
+app.get(
+  "/api",
+  apiReference({
+    spec: {
+      url: "/doc",
+    },
+  }),
+);
 app.doc("/doc", {
   openapi: "3.0.0",
   info: {

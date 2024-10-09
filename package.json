@@ -18,6 +18,7 @@
     "@hono/zod-openapi": "^0.16.0",
     "@hono/zod-validator": "^0.2.2",
     "@prisma/client": "^5.19.1",
+    "@scalar/hono-api-reference": "^0.5.152",
     "hono": "^4.6.2",
     "oslo": "^1.2.1"
   },
