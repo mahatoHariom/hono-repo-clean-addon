@@ -14,12 +14,15 @@ app.get("/", (c) => {
 app.use("*", logger());
 app.use(
   "*",
-  // cors({
-  //   origin:
-  //     "'http://localhost:5173','https://nakama.endabelyu.store','https://nakama-api.endabelyu.store','https://postman-echo.com'",
-  // }),
-  cors(),
+  cors({
+    origin: "*",
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  }),
 );
+// cors({
+//   origin:
+//     "'http://localhost:5173','https://nakama.endabelyu.store','https://nakama-api.endabelyu.store','https://postman-echo.com'",
+// }),
 app.notFound((c) => {
   return c.text("Sorry, the page you are looking for does not exist.", 404);
 });
