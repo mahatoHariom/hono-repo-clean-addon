@@ -51,7 +51,7 @@ export const getCart = async (userId: string) => {
         totalPrice: 0,
       };
     }
-    const itemSelected = carts.items.map((item) => item.selected);
+    const itemSelected = carts.items.filter((item) => item.selected === true);
     const totalItem = itemSelected.length;
     const totalPrice = carts.items.reduce((acc, item) => {
       if (item.selected) {
