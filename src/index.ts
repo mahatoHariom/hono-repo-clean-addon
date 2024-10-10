@@ -12,13 +12,7 @@ app.get("/", (c) => {
   return c.text("Hello This is Nakama's API!");
 });
 app.use("*", logger());
-app.use(
-  "*",
-  cors({
-    origin: "*",
-    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  }),
-);
+app.use("*", cors());
 // cors({
 //   origin:
 //     "'http://localhost:5173','https://nakama.endabelyu.store','https://nakama-api.endabelyu.store','https://postman-echo.com'",
