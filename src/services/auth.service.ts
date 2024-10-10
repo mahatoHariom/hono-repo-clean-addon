@@ -30,6 +30,7 @@ export const register = async (payload: z.infer<typeof registerSchema>) => {
       await prismaClient.cart.create({
         data: {
           userId: user.id,
+          allSelected: false,
         },
       });
     }

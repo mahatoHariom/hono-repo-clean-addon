@@ -31,7 +31,6 @@ export const getCart = async (userId: string) => {
         },
       },
     });
-
     if (!carts) {
       const newCart = await prismaClient.cart.create({
         data: {
@@ -52,9 +51,13 @@ export const getCart = async (userId: string) => {
         totalPrice: 0,
       };
     }
-    const totalItem = carts.items.length;
+    const itemSelected = carts.items.map((item) => item.selected);
+    const totalItem = itemSelected.length;
     const totalPrice = carts.items.reduce((acc, item) => {
-      return acc + item.quantity * item.product.price;
+      if (item.selected) {
+        return acc + item.quantity * item.product.price;
+      }
+      return acc; // Ensure you return the accumulator when not selected
     }, 0);
     return {
       carts,
@@ -160,6 +163,59 @@ export const updateById = async (itemId: string, quantity: number) => {
 
     return {
       product: updateProduct,
+    };
+  } catch (error: Error | any) {
+    return error;
+  } finally {
+    await prismaClient.$disconnect();
+  }
+};
+export const updateSelectedById = async (cartId: string, payload: string[]) => {
+  // console.log(payload, "poayload");
+  const cart = await prismaClient.cart.findUnique({
+    where: { id: cartId },
+    include: { items: true },
+  });
+  if (!cart) {
+    throw new Error("item not found!");
+  }
+
+  try {
+    // Update the selection status of each item in the cart where: {
+
+    const updatedItem = await prismaClient.cartItem.updateMany({
+      where: {
+        id: {
+          in: payload.map((p) => p),
+        },
+      },
+      data: {
+        selected: true, // Set selected to true if it exists in the payload
+      },
+    });
+    if (!updatedItem) {
+      throw new Error("update selecte failed");
+    }
+    const updatedCartItems = await prismaClient.cart.findFirst({
+      where: {
+        id: cartId,
+      },
+      include: {
+        items: true,
+      },
+    });
+    // Check if all items are selected
+    const allSelected = updatedCartItems?.items.every((item) => item.selected);
+
+    // Update the cart's allSelected field
+    const updateCart = await prismaClient.cart.update({
+      where: { id: cart.id },
+      data: { allSelected },
+      include: { items: true },
+    });
+    return {
+      message: "Selection updated successfully",
+      updateCart,
     };
   } catch (error: Error | any) {
     return error;
