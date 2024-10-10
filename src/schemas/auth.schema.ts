@@ -30,7 +30,7 @@ export const registerSchema = loginSchema
       description: "Address of the user.",
       example: "Sabaody Archipelago",
     }),
-    phone: z.string().max(255).optional().openapi({
+    phone: z.string().min(1).max(32).optional().openapi({
       description: "Phone number of the user.",
       example: "08132456789",
     }),

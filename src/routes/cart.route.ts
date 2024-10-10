@@ -178,7 +178,7 @@ cartRoute.openapi(
 // Update product by id
 cartRoute.openapi(
   {
-    method: "patch",
+    method: "put",
     path: "/items/{id}",
     middleware: checkUserToken,
     security: [
