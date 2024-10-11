@@ -171,54 +171,37 @@ export const updateById = async (itemId: string, quantity: number) => {
   }
 };
 export const updateSelectedById = async (cartId: string, payload: string[]) => {
-  // console.log(payload, "poayload");
   const cart = await prismaClient.cart.findUnique({
     where: { id: cartId },
     include: { items: true },
   });
+
   if (!cart) {
-    throw new Error("item not found!");
+    throw new Error("Cart not found!");
   }
 
   try {
-    // Update the selection status of each item in the cart where: {
-
-    const updatedItem = await prismaClient.cartItem.updateMany({
-      where: {
-        id: {
-          in: payload.map((p) => p),
-        },
-      },
-      data: {
-        selected: true, // Set selected to true if it exists in the payload
-      },
-    });
-    if (!updatedItem) {
-      throw new Error("update selecte failed");
+    if (payload.length === 0) {
+      await unselectAllItems(cartId);
+    } else {
+      await selectItemsById(payload);
     }
-    const updatedCartItems = await prismaClient.cart.findFirst({
-      where: {
-        id: cartId,
-      },
-      include: {
-        items: true,
-      },
-    });
-    // Check if all items are selected
+
+    const updatedCartItems = await fetchCartWithItems(cartId);
     const allSelected = updatedCartItems?.items.every((item) => item.selected);
 
-    // Update the cart's allSelected field
     const updateCart = await prismaClient.cart.update({
       where: { id: cart.id },
       data: { allSelected },
       include: { items: true },
     });
+
     return {
       message: "Selection updated successfully",
       updateCart,
     };
   } catch (error: Error | any) {
-    return error;
+    throw new Error(error.message || "Failed to update selection.");
   } finally {
     await prismaClient.$disconnect();
   }
@@ -388,4 +371,37 @@ export const buyItemFromOrder = async (orderId: string) => {
   } finally {
     await prismaClient.$disconnect();
   }
+};
+
+const unselectAllItems = async (cartId: string) => {
+  await prismaClient.cartItem.updateMany({
+    where: { cartId },
+    data: {
+      selected: false,
+    },
+  });
+};
+
+const selectItemsById = async (itemIds: string[]) => {
+  await prismaClient.cartItem.updateMany({
+    where: {
+      id: {
+        in: itemIds,
+      },
+    },
+    data: {
+      selected: true,
+    },
+  });
+};
+
+const fetchCartWithItems = async (cartId: string) => {
+  return prismaClient.cart.findFirst({
+    where: {
+      id: cartId,
+    },
+    include: {
+      items: true,
+    },
+  });
 };
