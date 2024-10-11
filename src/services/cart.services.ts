@@ -240,10 +240,7 @@ export const deleteItemsFromCartById = async (
   }
 };
 
-export const checkout = async (
-  // body: z.infer<typeof cartIdPayloadSchema>[],
-  userId: string,
-) => {
+export const checkout = async (userId: string) => {
   try {
     const cart = await prismaClient.cart.findFirst({
       where: { userId },
@@ -390,7 +387,7 @@ const selectItemsById = async (itemIds: string[]) => {
     },
   });
   console.log(items, "items");
-  if (items.length > 0) {
+  if (items.length > 0 && itemIds.length === 1) {
     await prismaClient.cartItem.updateMany({
       where: {
         id: {
