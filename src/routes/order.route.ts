@@ -1,7 +1,11 @@
 import { OpenAPIHono, z } from "@hono/zod-openapi";
 import { checkUserToken } from "../middleware/check-user-token";
 import { Context } from "hono";
-import { getOrders, payment } from "../services/cart.services";
+import {
+  getOrderByorderId,
+  getOrders,
+  payment,
+} from "../services/cart.services";
 import { cartItemSchema } from "../schemas/cart.schema";
 const API_TAGS = ["Orders"];
 export const orderRoute = new OpenAPIHono();
@@ -17,7 +21,7 @@ orderRoute.openAPIRegistry.registerComponent(
     description: "Bearer token",
   },
 );
-// get order data
+// get orders data
 orderRoute.openapi(
   {
     method: "get",
@@ -75,6 +79,76 @@ orderRoute.openapi(
         {
           ok: false,
           message: error.message || "Get orders data failed!",
+        },
+        400,
+      );
+    }
+  },
+);
+// get order data by id
+orderRoute.openapi(
+  {
+    method: "get",
+    path: "/{orderId}",
+    middleware: checkUserToken,
+    security: [
+      {
+        AuthorizationBearer: [],
+      },
+    ],
+    summary: "Get order detail",
+    request: {
+      params: z.object({
+        orderId: z.string(),
+      }),
+    },
+    responses: {
+      200: {
+        description: "Get order detail",
+        content: {
+          "application/json": {
+            schema: z.object({
+              ok: z.boolean().default(true),
+              message: z.string(),
+              // data: cartSchema,
+            }),
+          },
+        },
+      },
+      400: {
+        description: "Get order detail Failed",
+        content: {
+          "application/json": {
+            schema: z.object({
+              ok: z.boolean().default(false),
+              message: z.string(),
+            }),
+          },
+        },
+      },
+    },
+    tags: API_TAGS,
+  },
+  async (c: Context) => {
+    const { orderId } = c.req.param();
+
+    try {
+      const order = await getOrderByorderId(orderId);
+
+      return c.json(
+        {
+          ok: true,
+          message: "Get order detail successfully",
+          data: order,
+        },
+        200,
+      );
+    } catch (error: Error | any) {
+      console.info(error.message);
+      return c.json(
+        {
+          ok: false,
+          message: error.message || "Get order detail failed!",
         },
         400,
       );

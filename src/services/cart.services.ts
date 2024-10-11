@@ -320,79 +320,6 @@ export const payment = async (userId: string, cartId: string) => {
   }
 };
 
-export const getOrders = async (userId: string) => {
-  try {
-    const orders = await prismaClient.order.findMany({
-      where: {
-        userId,
-      },
-      include: {
-        items: {
-          include: {
-            product: true,
-          },
-        },
-      },
-    });
-    if (!orders) {
-      throw new Error("Orders not found!");
-    }
-    return {
-      orders,
-    };
-  } catch (error) {
-    throw error;
-  } finally {
-    await prismaClient.$disconnect();
-  }
-};
-
-export const buyItemFromOrder = async (orderId: string) => {
-  try {
-    const order = await prismaClient.order.findUnique({
-      where: { id: orderId },
-      include: {
-        user: true,
-        items: true,
-      },
-    });
-    if (!order) {
-      throw new Error("Order not found!");
-    }
-
-    const updateStatusOrder = await prismaClient.order.update({
-      where: { id: orderId },
-      data: { status: "COMPLETED" },
-      include: {
-        user: true,
-        items: true,
-      },
-    });
-
-    if (!updateStatusOrder) {
-      throw new Error("Buy items failed");
-    }
-    const deleteItemsFromCart = await prismaClient.cartItem.deleteMany({
-      where: {
-        id: {
-          in: order.items.map((item) => item.id),
-        },
-      },
-    });
-    if (!deleteItemsFromCart) {
-      throw new Error("But items failed");
-    }
-    console.info(updateStatusOrder);
-    return {
-      updateStatusOrder,
-    };
-  } catch (error) {
-    throw error;
-  } finally {
-    await prismaClient.$disconnect();
-  }
-};
-
 const unselectAllItems = async (cartId: string) => {
   await prismaClient.cartItem.updateMany({
     where: { cartId },
@@ -446,4 +373,104 @@ const fetchCartWithItems = async (cartId: string) => {
       items: true,
     },
   });
+};
+
+export const getOrders = async (userId: string) => {
+  try {
+    const orders = await prismaClient.order.findMany({
+      where: {
+        userId,
+      },
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      },
+    });
+    if (!orders) {
+      throw new Error("Orders not found!");
+    }
+    return {
+      orders,
+    };
+  } catch (error) {
+    throw error;
+  } finally {
+    await prismaClient.$disconnect();
+  }
+};
+export const getOrderByorderId = async (orderId: string) => {
+  try {
+    const order = await prismaClient.order.findFirst({
+      where: {
+        id: orderId,
+      },
+      include: {
+        user: true,
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      },
+    });
+    if (!order) {
+      throw new Error("Orders not found!");
+    }
+    return {
+      order,
+    };
+  } catch (error) {
+    throw error;
+  } finally {
+    await prismaClient.$disconnect();
+  }
+};
+
+export const buyItemFromOrder = async (orderId: string) => {
+  try {
+    const order = await prismaClient.order.findUnique({
+      where: { id: orderId },
+      include: {
+        user: true,
+        items: true,
+      },
+    });
+    if (!order) {
+      throw new Error("Order not found!");
+    }
+
+    const updateStatusOrder = await prismaClient.order.update({
+      where: { id: orderId },
+      data: { status: "COMPLETED" },
+      include: {
+        user: true,
+        items: true,
+      },
+    });
+
+    if (!updateStatusOrder) {
+      throw new Error("Buy items failed");
+    }
+    const deleteItemsFromCart = await prismaClient.cartItem.deleteMany({
+      where: {
+        id: {
+          in: order.items.map((item) => item.id),
+        },
+      },
+    });
+    if (!deleteItemsFromCart) {
+      throw new Error("But items failed");
+    }
+    console.info(updateStatusOrder);
+    return {
+      updateStatusOrder,
+    };
+  } catch (error) {
+    throw error;
+  } finally {
+    await prismaClient.$disconnect();
+  }
 };
