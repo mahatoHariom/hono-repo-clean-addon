@@ -424,15 +424,6 @@ cartRoute.openapi(
     ],
     summary: "Checkout Product from cart",
     validator: z.array(cartItemSchema.pick({ id: true })),
-    request: {
-      body: {
-        content: {
-          "application/json": {
-            schema: z.array(cartIdPayloadSchema),
-          },
-        },
-      },
-    },
     responses: {
       200: {
         description: "Add Product to cart",
@@ -461,10 +452,10 @@ cartRoute.openapi(
     tags: API_TAGS,
   },
   async (c: Context) => {
-    const body = await c.req.json();
+    // const body = await c.req.json();
     const user = c.get("user");
     try {
-      const order = await checkout(body, user.id);
+      const order = await checkout(user.id);
 
       return c.json(
         {

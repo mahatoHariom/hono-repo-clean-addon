@@ -16,7 +16,7 @@ export const getCart = async (userId: string) => {
       where: {
         userId,
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: "asc" },
       include: {
         user: true,
         items: {
@@ -241,7 +241,7 @@ export const deleteItemsFromCartById = async (
 };
 
 export const checkout = async (
-  body: z.infer<typeof cartIdPayloadSchema>[],
+  // body: z.infer<typeof cartIdPayloadSchema>[],
   userId: string,
 ) => {
   try {
@@ -255,22 +255,21 @@ export const checkout = async (
 
     const itemOrder = await prismaClient.cartItem.findMany({
       where: {
-        id: {
-          in: body, // body contains the array of IDs
-        },
+        selected: true,
       },
       include: {
         product: true, // Include the product information
       },
     });
 
-    console.info(body, itemOrder, "orders");
-    const isItemExist = body.some((id) =>
-      itemOrder.some((item) => item.id === id),
-    );
+    console.log(itemOrder, "itemss");
+    // console.info(body, itemOrder, "orders");
+    // const isItemExist = body.some((id) =>
+    //   itemOrder.some((item) => item.id === id),
+    // );
 
-    if (!isItemExist) {
-      throw new Error("Some item not found!");
+    if (itemOrder.length === 0) {
+      throw new Error("No Item Selected");
     }
     const createdOrder = await prismaClient.order.create({
       data: {
@@ -293,7 +292,6 @@ export const checkout = async (
         items: true,
       },
     });
-    console.info(itemOrder, itemOrder.length, isItemExist);
     return {
       createdOrder,
     };
@@ -383,16 +381,38 @@ const unselectAllItems = async (cartId: string) => {
 };
 
 const selectItemsById = async (itemIds: string[]) => {
-  await prismaClient.cartItem.updateMany({
+  const items = await prismaClient.cartItem.findMany({
     where: {
       id: {
         in: itemIds,
       },
-    },
-    data: {
       selected: true,
     },
   });
+  console.log(items, "items");
+  if (items.length > 0) {
+    await prismaClient.cartItem.updateMany({
+      where: {
+        id: {
+          in: itemIds,
+        },
+      },
+      data: {
+        selected: false,
+      },
+    });
+  } else {
+    await prismaClient.cartItem.updateMany({
+      where: {
+        id: {
+          in: itemIds,
+        },
+      },
+      data: {
+        selected: true,
+      },
+    });
+  }
 };
 
 const fetchCartWithItems = async (cartId: string) => {
