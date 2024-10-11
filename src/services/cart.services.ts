@@ -240,24 +240,23 @@ export const deleteItemsFromCartById = async (
   }
 };
 
-export const checkout = async (userId: string) => {
+export const payment = async (userId: string, cartId: string) => {
   try {
     const cart = await prismaClient.cart.findFirst({
-      where: { userId },
-      include: { items: true },
+      where: { id: cartId },
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      },
     });
     if (!cart) {
       throw new Error("Cart not found!");
     }
 
-    const itemOrder = await prismaClient.cartItem.findMany({
-      where: {
-        selected: true,
-      },
-      include: {
-        product: true, // Include the product information
-      },
-    });
+    const itemOrder = cart.items.filter((item) => item.selected === true);
 
     console.log(itemOrder, "itemss");
     // console.info(body, itemOrder, "orders");
@@ -273,7 +272,7 @@ export const checkout = async (userId: string) => {
         userId,
         items: {
           create: itemOrder.map((item) => ({
-            id: item.id,
+            itemCartId: item.id,
             productId: item.productId,
             quantity: item.quantity,
             productPrice: item.product.price,
@@ -282,13 +281,35 @@ export const checkout = async (userId: string) => {
         totalPrice: itemOrder.reduce((acc, item) => {
           return acc + item.quantity * item.product.price;
         }, 0),
-        status: "PENDING",
+        status: "COMPLETED",
       },
       include: {
         user: true,
         items: true,
       },
     });
+    console.log(createdOrder, "orde");
+    const deleteItemsFromCart = await prismaClient.cartItem.deleteMany({
+      where: {
+        id: {
+          in: createdOrder.items.map((item) => item.itemCartId),
+        },
+      },
+    });
+    if (!deleteItemsFromCart) {
+      throw new Error("But items failed");
+    }
+
+    if (cart.allSelected) {
+      await prismaClient.cart.update({
+        where: {
+          id: cartId,
+        },
+        data: {
+          allSelected: false,
+        },
+      });
+    }
     return {
       createdOrder,
     };

@@ -114,7 +114,8 @@ model Order {
 }
 
 model OrderItem {
-  id String @id 
+   id String @id @default(cuid())
+  itemCartId String
 
   order       Order   @relation(fields: [orderId], references: [id])
   orderId     String

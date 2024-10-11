@@ -1,7 +1,7 @@
 import { OpenAPIHono, z } from "@hono/zod-openapi";
 import { checkUserToken } from "../middleware/check-user-token";
 import { Context } from "hono";
-import { buyItemFromOrder, getOrders } from "../services/cart.services";
+import { getOrders, payment } from "../services/cart.services";
 import { cartItemSchema } from "../schemas/cart.schema";
 const API_TAGS = ["Orders"];
 export const orderRoute = new OpenAPIHono();
@@ -82,27 +82,98 @@ orderRoute.openapi(
   },
 );
 
-// buy item
+// // buy item
+// orderRoute.openapi(
+//   {
+//     method: "post",
+//     path: "/buy/{orderId}",
+//     middleware: checkUserToken,
+//     security: [
+//       {
+//         AuthorizationBearer: [],
+//       },
+//     ],
+//     summary: "Checkout Product from cart",
+//     validator: z.array(cartItemSchema.pick({ id: true })),
+//     request: {
+//       params: z.object({
+//         orderId: z.string(),
+//       }),
+//     },
+//     responses: {
+//       200: {
+//         description: "Add Product to cart",
+//         content: {
+//           "application/json": {
+//             schema: z.object({
+//               ok: z.boolean().default(true),
+//               message: z.string(),
+//               // data: cartSchema,
+//             }),
+//           },
+//         },
+//       },
+//       400: {
+//         description: "Add Product to cart Failed",
+//         content: {
+//           "application/json": {
+//             schema: z.object({
+//               ok: z.boolean().default(false),
+//               message: z.string(),
+//             }),
+//           },
+//         },
+//       },
+//     },
+//     tags: API_TAGS,
+//   },
+//   async (c: Context) => {
+//     const id = c.req.param("orderId");
+//     // const user = c.get("user");
+//     try {
+//       const order = await buyItemFromOrder(id);
+
+//       return c.json(
+//         {
+//           ok: true,
+//           message: "Order created successfully",
+//           data: order,
+//         },
+//         200,
+//       );
+//     } catch (error: Error | any) {
+//       console.info(error.message);
+//       return c.json(
+//         {
+//           ok: false,
+//           message: error.message || "Order created failed!",
+//         },
+//         400,
+//       );
+//     }
+//   },
+// );
+// Buy product
 orderRoute.openapi(
   {
     method: "post",
-    path: "/buy/{orderId}",
+    path: "/payment/{cartId}",
     middleware: checkUserToken,
     security: [
       {
         AuthorizationBearer: [],
       },
     ],
-    summary: "Checkout Product from cart",
+    summary: "Buy Product (Payment) ",
     validator: z.array(cartItemSchema.pick({ id: true })),
     request: {
       params: z.object({
-        orderId: z.string(),
+        cartId: z.string(),
       }),
     },
     responses: {
       200: {
-        description: "Add Product to cart",
+        description: "Buy Product and order created successfully",
         content: {
           "application/json": {
             schema: z.object({
@@ -114,7 +185,7 @@ orderRoute.openapi(
         },
       },
       400: {
-        description: "Add Product to cart Failed",
+        description: "Buy Product and order created Failed",
         content: {
           "application/json": {
             schema: z.object({
@@ -128,15 +199,15 @@ orderRoute.openapi(
     tags: API_TAGS,
   },
   async (c: Context) => {
-    const id = c.req.param("orderId");
-    // const user = c.get("user");
+    const cartId = c.req.param("cartId");
+    const user = c.get("user");
     try {
-      const order = await buyItemFromOrder(id);
+      const order = await payment(user.id, cartId);
 
       return c.json(
         {
           ok: true,
-          message: "Order created successfully",
+          message: "Buy Product and order created successfully",
           data: order,
         },
         200,
@@ -146,7 +217,7 @@ orderRoute.openapi(
       return c.json(
         {
           ok: false,
-          message: error.message || "Order created failed!",
+          message: error.message || "Buy Product and order created failed!",
         },
         400,
       );

@@ -1,16 +1,10 @@
 import { OpenAPIHono, z } from "@hono/zod-openapi";
 
 import { checkUserToken } from "../middleware/check-user-token";
-import {
-  cartIdPayloadSchema,
-  cartItemSchema,
-  cartPayloadSchema,
-  cartSchema,
-} from "../schemas/cart.schema";
+import { cartPayloadSchema, cartSchema } from "../schemas/cart.schema";
 import { Context } from "hono";
 import {
   addItems,
-  checkout,
   deleteItemsFromCartById,
   getCart,
   updateById,
@@ -404,73 +398,6 @@ cartRoute.openapi(
         {
           ok: false,
           message: error.message || "Product not found!",
-        },
-        400,
-      );
-    }
-  },
-);
-
-// Checkout product from cart
-cartRoute.openapi(
-  {
-    method: "post",
-    path: "/checkout",
-    middleware: checkUserToken,
-    security: [
-      {
-        AuthorizationBearer: [],
-      },
-    ],
-    summary: "Checkout Product from cart",
-    validator: z.array(cartItemSchema.pick({ id: true })),
-    responses: {
-      200: {
-        description: "Add Product to cart",
-        content: {
-          "application/json": {
-            schema: z.object({
-              ok: z.boolean().default(true),
-              message: z.string(),
-              // data: cartSchema,
-            }),
-          },
-        },
-      },
-      400: {
-        description: "Add Product to cart Failed",
-        content: {
-          "application/json": {
-            schema: z.object({
-              ok: z.boolean().default(false),
-              message: z.string(),
-            }),
-          },
-        },
-      },
-    },
-    tags: API_TAGS,
-  },
-  async (c: Context) => {
-    // const body = await c.req.json();
-    const user = c.get("user");
-    try {
-      const order = await checkout(user.id);
-
-      return c.json(
-        {
-          ok: true,
-          message: "Order created successfully",
-          data: order,
-        },
-        200,
-      );
-    } catch (error: Error | any) {
-      console.info(error.message);
-      return c.json(
-        {
-          ok: false,
-          message: error.message || "Order created failed!",
         },
         400,
       );
