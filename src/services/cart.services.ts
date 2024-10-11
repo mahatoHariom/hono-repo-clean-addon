@@ -327,7 +327,11 @@ export const getOrders = async (userId: string) => {
         userId,
       },
       include: {
-        items: true,
+        items: {
+          include: {
+            product: true,
+          },
+        },
       },
     });
     if (!orders) {
