@@ -16,7 +16,7 @@ export const getCart = async (userId: string) => {
       where: {
         userId,
       },
-      orderBy: { createdAt: "asc" },
+      orderBy: { createdAt: "desc" },
       include: {
         user: true,
         items: {
