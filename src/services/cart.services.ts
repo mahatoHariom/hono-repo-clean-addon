@@ -226,6 +226,11 @@ export const updateSelectedById = async (itemId: string, select: boolean) => {
 
     const mustSelectAll = updateSelect.cart.items.length === 1;
     if (!mustSelectAll) {
+      await prismaClient.cart.update({
+        where: { id: updateSelect.cart.id },
+        data: { allSelected: false },
+        include: { items: true },
+      });
       throw new Error("Update selected all failed");
     }
     const updateCart = await prismaClient.cart.update({
