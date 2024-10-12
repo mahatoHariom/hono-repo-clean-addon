@@ -7,6 +7,7 @@ import {
   addItems,
   deleteItemsFromCartById,
   getCart,
+  updateAllSelectedById,
   updateById,
   updateSelectedById,
 } from "../services/cart.services";
@@ -248,27 +249,27 @@ cartRoute.openapi(
     }
   },
 );
-// Update selected product by id
+// Update selectedAll product by id
 cartRoute.openapi(
   {
     method: "put",
-    path: "/items/selected/{id}",
+    path: "/items/selected/{cartId}",
     middleware: checkUserToken,
     security: [
       {
         AuthorizationBearer: [],
       },
     ],
-    summary: "Update select Product by id",
+    summary: "Update select all Product by id",
     request: {
       params: z.object({
-        id: z.string(),
+        cartId: z.string(),
       }),
       body: {
         content: {
           "application/json": {
             schema: z.object({
-              payload: z.array(z.string().min(1)),
+              selected: z.boolean(),
             }),
           },
         },
@@ -302,12 +303,94 @@ cartRoute.openapi(
     tags: API_TAGS,
   },
   async (c) => {
-    const { id: itemId } = c.req.valid("param");
+    const { cartId } = c.req.valid("param");
+    const body = await c.req.json();
+    try {
+      const { message, updateCart } = await updateAllSelectedById(
+        cartId,
+        body.selected,
+      );
+
+      return c.json(
+        {
+          ok: true,
+          message: "Update select successfully",
+          data: updateCart,
+        },
+        200,
+      );
+    } catch (error: Error | any) {
+      console.info(error.message);
+      return c.json(
+        {
+          ok: false,
+          message: error.message || "Product not found!",
+        },
+        400,
+      );
+    }
+  },
+);
+// Update selected product by id
+cartRoute.openapi(
+  {
+    method: "put",
+    path: "/items/selected/{itemsId}",
+    middleware: checkUserToken,
+    security: [
+      {
+        AuthorizationBearer: [],
+      },
+    ],
+    summary: "Update select Product by id",
+    request: {
+      params: z.object({
+        itemsId: z.string(),
+      }),
+      body: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              selected: z.boolean(),
+            }),
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: "Update select Product by id",
+        content: {
+          "application/json": {
+            schema: z.object({
+              ok: z.boolean().default(true),
+              message: z.string(),
+              // data: cartSchema,
+            }),
+          },
+        },
+      },
+      400: {
+        description: "Update select Product by id Failed",
+        content: {
+          "application/json": {
+            schema: z.object({
+              ok: z.boolean().default(false),
+              message: z.string(),
+            }),
+          },
+        },
+      },
+    },
+    tags: API_TAGS,
+  },
+  async (c) => {
+    const { itemsId } = c.req.valid("param");
     const body = await c.req.json();
     try {
       const { message, updateCart } = await updateSelectedById(
-        itemId,
-        body.payload,
+        itemsId,
+        body.selected,
       );
 
       return c.json(

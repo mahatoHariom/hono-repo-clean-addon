@@ -170,7 +170,10 @@ export const updateById = async (itemId: string, quantity: number) => {
     await prismaClient.$disconnect();
   }
 };
-export const updateSelectedById = async (cartId: string, payload: string[]) => {
+export const updateAllSelectedById = async (
+  cartId: string,
+  select: boolean,
+) => {
   const cart = await prismaClient.cart.findUnique({
     where: { id: cartId },
     include: { items: true },
@@ -181,18 +184,53 @@ export const updateSelectedById = async (cartId: string, payload: string[]) => {
   }
 
   try {
-    if (payload.length === 0) {
-      await unselectAllItems(cartId);
+    if (select) {
+      await selectAllItems(cartId);
     } else {
-      await selectItemsById(payload);
+      await unselectAllItems(cartId);
     }
-
     const updatedCartItems = await fetchCartWithItems(cartId);
     const allSelected = updatedCartItems?.items.every((item) => item.selected);
-
     const updateCart = await prismaClient.cart.update({
       where: { id: cart.id },
       data: { allSelected },
+      include: { items: true },
+    });
+
+    return {
+      message: "Selection updated successfully",
+      updateCart,
+    };
+  } catch (error: Error | any) {
+    throw new Error(error.message || "Failed to update selection.");
+  } finally {
+    await prismaClient.$disconnect();
+  }
+};
+export const updateSelectedById = async (itemId: string, select: boolean) => {
+  try {
+    const updateSelect = await prismaClient.cartItem.update({
+      where: { id: itemId },
+      data: { selected: select },
+      include: {
+        cart: {
+          include: { items: true },
+        },
+        product: true,
+      },
+    });
+
+    if (!updateSelect) {
+      throw new Error("Update selected failed");
+    }
+
+    const mustSelectAll = updateSelect.cart.items.length === 1;
+    if (!mustSelectAll) {
+      throw new Error("Update selected all failed");
+    }
+    const updateCart = await prismaClient.cart.update({
+      where: { id: updateSelect.cart.id },
+      data: { allSelected: true },
       include: { items: true },
     });
 
@@ -329,39 +367,13 @@ const unselectAllItems = async (cartId: string) => {
   });
 };
 
-const selectItemsById = async (itemIds: string[]) => {
-  const items = await prismaClient.cartItem.findMany({
-    where: {
-      id: {
-        in: itemIds,
-      },
+const selectAllItems = async (cartId: string) => {
+  await prismaClient.cartItem.updateMany({
+    where: { cartId },
+    data: {
       selected: true,
     },
   });
-  console.log(items, "items");
-  if (items.length > 0 && itemIds.length === 1) {
-    await prismaClient.cartItem.updateMany({
-      where: {
-        id: {
-          in: itemIds,
-        },
-      },
-      data: {
-        selected: false,
-      },
-    });
-  } else {
-    await prismaClient.cartItem.updateMany({
-      where: {
-        id: {
-          in: itemIds,
-        },
-      },
-      data: {
-        selected: true,
-      },
-    });
-  }
 };
 
 const fetchCartWithItems = async (cartId: string) => {
