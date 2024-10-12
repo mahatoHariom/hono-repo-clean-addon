@@ -253,7 +253,7 @@ cartRoute.openapi(
 cartRoute.openapi(
   {
     method: "put",
-    path: "/items/selected/{cartId}",
+    path: "/items/selectedAll/{cartId}",
     middleware: checkUserToken,
     security: [
       {
