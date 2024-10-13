@@ -128,6 +128,15 @@ export const addItems = async (
       //   },
       // },
     });
+    if (!updatedCart) {
+      throw new Error("Cart not found!");
+    }
+    // return {
+    const unselectCart = await prismaClient.cart.update({
+      where: { id: updatedCart.id },
+      data: { allSelected: false },
+      include: { items: true },
+    });
     return {
       updatedCart,
     };
@@ -224,15 +233,50 @@ export const updateSelectedById = async (itemId: string, select: boolean) => {
       throw new Error("Update selected failed");
     }
 
-    const mustSelectAll = updateSelect.cart.items.length === 1;
-    if (!mustSelectAll) {
-      await prismaClient.cart.update({
+    const itemSelected = updateSelect.cart.items.length === 1;
+    if (!itemSelected) {
+      const isAllSelect =
+        updateSelect.cart.items.length ===
+        updateSelect.cart.items.filter((item) => item.selected).length;
+      if (isAllSelect) {
+        const unselectCart = await prismaClient.cart.update({
+          where: { id: updateSelect.cart.id },
+          data: { allSelected: true },
+          include: { items: true },
+        });
+        return {
+          message: "Selection updated successfully",
+          updateCart: unselectCart,
+        };
+      } else {
+        const unselectCart = await prismaClient.cart.update({
+          where: { id: updateSelect.cart.id },
+          data: { allSelected: false },
+          include: { items: true },
+        });
+        return {
+          message: "Selection updated successfully",
+          updateCart: unselectCart,
+        };
+      }
+    }
+    if (!select) {
+      console.log("not select", updateSelect.cart.id, "items");
+
+      const unselectCart = await prismaClient.cart.update({
         where: { id: updateSelect.cart.id },
         data: { allSelected: false },
         include: { items: true },
       });
-      throw new Error("Update selected all failed");
+      if (!unselectCart) {
+        throw new Error("Update selected all failed");
+      }
+      return {
+        message: "Selection updated successfully",
+        updateCart: unselectCart,
+      };
     }
+
     const updateCart = await prismaClient.cart.update({
       where: { id: updateSelect.cart.id },
       data: { allSelected: true },
