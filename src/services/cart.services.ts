@@ -339,21 +339,17 @@ export const payment = async (userId: string, cartId: string) => {
         },
       },
     });
+
     if (!cart) {
       throw new Error("Cart not found!");
     }
 
     const itemOrder = cart.items.filter((item) => item.selected === true);
 
-    console.log(itemOrder, "itemss");
-    // console.info(body, itemOrder, "orders");
-    // const isItemExist = body.some((id) =>
-    //   itemOrder.some((item) => item.id === id),
-    // );
-
     if (itemOrder.length === 0) {
       throw new Error("No Item Selected");
     }
+
     const createdOrder = await prismaClient.order.create({
       data: {
         userId,
@@ -375,7 +371,20 @@ export const payment = async (userId: string, cartId: string) => {
         items: true,
       },
     });
-    console.log(createdOrder, "orde");
+
+    // Update stock based on the ordered quantity
+    for (const item of createdOrder.items) {
+      await prismaClient.product.update({
+        where: {
+          id: item.productId,
+        },
+        data: {
+          stock: {
+            decrement: item.quantity, // Decrease stock by the quantity ordered
+          },
+        },
+      });
+    }
     const deleteItemsFromCart = await prismaClient.cartItem.deleteMany({
       where: {
         id: {
@@ -384,9 +393,8 @@ export const payment = async (userId: string, cartId: string) => {
       },
     });
     if (!deleteItemsFromCart) {
-      throw new Error("But items failed");
+      throw new Error("Delete items failed");
     }
-
     if (cart.allSelected) {
       await prismaClient.cart.update({
         where: {
@@ -397,6 +405,7 @@ export const payment = async (userId: string, cartId: string) => {
         },
       });
     }
+
     return {
       createdOrder,
     };
