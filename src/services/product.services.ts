@@ -33,6 +33,7 @@ export const getAll = async (
         where: {
           name: {
             contains: q,
+            mode: "insensitive",
           },
         },
       }),
@@ -41,7 +42,6 @@ export const getAll = async (
     if (products.length === 0) {
       throw new Error("Products not found!");
     }
-
     const paginationData = {
       currentPage: page,
       totalPages: Math.ceil(total / limit),

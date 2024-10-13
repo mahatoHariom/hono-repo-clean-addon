@@ -1,14 +1,47 @@
 export const dataProducts = [
   {
-    name: "Ace Neclacke",
-    slug: "ace-necklace",
+    name: "Action Figure Luffy",
+    slug: "action-figure-luffy",
+    price: 360000,
+    imageURL:
+      "https://onepiece.b-cdn.net/wp-content/uploads/2022/01/17CM-Anime-One-Piece-Action-Figure-PVC-Luffy-New-Action-Collectible-Model-Decorations-Doll-Children-Toys.jpg",
+    description: "Action Figure of Monkey D. Luffy",
+    category: "action-figure",
+    stock: 7,
+    sku: "AF-LUFFY",
+  },
+  {
+    name: "Action Figure Zoro",
+    slug: "action-figure-zoro",
+    price: 360000,
+    imageURL:
+      "https://onepiece.store/wp-content/uploads/2024/05/One-Piece-Figure-21cm-Roronoa-Zoro-Double-Headed-Three-Knife-Fighting-Skill-Anime-Action-Model-Decorations.jpg_640x640.webp",
+    description: "Action Figure of Roronoa Zoro",
+    category: "action-figure",
+    stock: 7,
+    sku: "AF-ZORO",
+  },
+  {
+    name: "Action Figure Sanji",
+    slug: "action-figure-sanji",
+    price: 360000,
+    imageURL:
+      "https://onepiece.b-cdn.net/wp-content/uploads/2023/06/14-17cm-One-Piece-Film-Red-DXF-Uta-Anime-Figure-Luffy-Nami-Robin-Shanks-Manga-Statue-2.jpg_640x640-2.jpg",
+    description: "Action Figure of Vinsmoke Sanji",
+    category: "action-figure",
+    stock: 7,
+    sku: "AF-SANJI",
+  },
+  {
+    name: "Portgas D. Ace Neclacke",
+    slug: "portgas-d-ace-necklace",
     price: 120000,
     imageURL:
       "https://onepiece.b-cdn.net/wp-content/uploads/2021/05/product-image-715658296.jpg",
     description: "Favourite necklace of Portgas D. Ace",
     category: "necklace",
     stock: 5,
-    sku: "NCK-ACE-",
+    sku: "NCK-PORTGAS-ACE",
   },
   {
     name: "Luffy Hat",
@@ -32,17 +65,7 @@ export const dataProducts = [
     stock: 4,
     sku: "CPL-LUFFY",
   },
-  {
-    name: "Action Figure Luffy",
-    slug: "action-figure-luffy",
-    price: 360000,
-    imageURL:
-      "https://onepiece.b-cdn.net/wp-content/uploads/2022/01/17CM-Anime-One-Piece-Action-Figure-PVC-Luffy-New-Action-Collectible-Model-Decorations-Doll-Children-Toys.jpg",
-    description: "Action Figure of Monkey D. Luffy",
-    category: "action-figure",
-    stock: 7,
-    sku: "AF-LUFFY",
-  },
+
   {
     name: "Pencil Holder Luffy",
     slug: "pencil-holder-luffy",
